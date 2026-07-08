@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: docsearch-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: docsearch
+      POSTGRES_USER: docsearch
+      POSTGRES_PASSWORD: docsearch1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - docsearch-pgdata:/var/lib/postgresql/data
+      - ./docker/init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docsearch -d docsearch"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  docsearch-pgdata:
