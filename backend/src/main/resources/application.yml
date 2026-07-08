@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: docsearch
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/docsearch
+    username: docsearch
+    password: docsearch1234
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate   # 스키마는 init-db SQL로 관리, JPA가 임의로 건드리지 않도록 validate
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      embedding:
+        options:
+          model: text-embedding-3-small
+      chat:
+        options:
+          model: gpt-4o-mini
+    vectorstore:
+      pgvector:
+        initialize-schema: true      # 테이블 + HNSW 인덱스를 최초 기동 시 Spring AI가 자동 생성
+        table-name: document_chunks  # 기본값 vector_store 대신 도메인 의미가 드러나는 이름으로 변경.
+                                      # 단, 컬럼 구조(id/content/metadata/embedding)는 Spring AI 고정 스키마 그대로임에 유의
+                                      # (documentId, chunkIndex, category 등은 metadata JSON 안에 들어감. 별도 실컬럼 아님)
+        index-type: HNSW             # 빈 테이블 상태에서도 인덱스 품질 문제 없음 (IVFFlat과 다른 점)
+        dimensions: 1536
+        distance-type: COSINE_DISTANCE
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+
+app:
+  chunking:
+    chunk-size: 500              # 토큰 기준 청크 목표 크기 (기본 800보다 작게 잡아 chunk가 여러 개 나오는 걸 테스트하기 쉽게)
+    min-chunk-size-chars: 200
+    min-chunk-length-to-embed: 5
+    max-num-chunks: 10000
