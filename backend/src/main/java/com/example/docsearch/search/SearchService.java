@@ -4,6 +4,7 @@ import com.example.docsearch.search.dto.SearchResultDto;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Map;
 public class SearchService {
 
     private final VectorStore vectorStore;
+    private final FilterExpressionBuilder filterExpressionBuilder = new FilterExpressionBuilder();
 
     public SearchService(VectorStore vectorStore) {
         this.vectorStore = vectorStore;
@@ -33,8 +35,10 @@ public class SearchService {
             builder.similarityThreshold(threshold);
         }
         if (category != null && !category.isBlank()) {
-            // filterExpression은 SQL과 비슷한 문법의 문자열. 문자열 값은 작은따옴표로 감싸야 함
-            builder.filterExpression("category == '" + category + "'");
+            // 문자열을 직접 이어붙이지 않고 DSL 빌더로 구성.
+            // category 값에 작은따옴표 등 특수문자가 섞여도 표현식 문법이 깨지거나
+            // 의도치 않게 조건이 바뀌는(필터 인젝션) 위험이 없음 - 값은 항상 데이터로만 취급됨
+            builder.filterExpression(filterExpressionBuilder.eq("category", category).build());
         }
 
         List<Document> results = vectorStore.similaritySearch(builder.build());
