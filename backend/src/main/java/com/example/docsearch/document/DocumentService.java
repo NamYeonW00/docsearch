@@ -73,8 +73,12 @@ public class DocumentService {
         return DocumentResponse.of(document);
     }
 
+    // title로 등록된 버전이 하나도 없으면 빈 리스트를 반환한다 (404 아님).
+    // getById/getActiveByTitle과 달리 이 API는 "목록 조회"이므로,
     // 결과 0건은 에러가 아니라 정상적인 응답으로 처리한다.
-    public List<Document> getVersions(String title) {
-        return documentRepository.findAllByTitleOrderByVersionDesc(title);
+    public List<DocumentResponse> getVersions(String title) {
+        return documentRepository.findAllByTitleOrderByVersionDesc(title).stream()
+                .map(DocumentResponse::of) // 엔티티 리스트를 DTO 리스트로 변환 (엔티티를 API 밖으로 노출하지 않기 위함)
+                .toList();
     }
 }

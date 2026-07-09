@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 @RestController // @Controller + @ResponseBody. 메서드 반환값이 View 이름이 아니라 JSON body로 바로 직렬화됨
 @RequestMapping("/api/documents") // 이 컨트롤러의 모든 엔드포인트 앞에 공통으로 붙는 경로
@@ -44,7 +45,7 @@ public class DocumentController {
 
     // GET /api/documents/title/{title}/versions  - 해당 title의 버전 이력 전체 (최신순)
     @GetMapping("/title/{title}/versions")
-    public java.util.List<Document> getVersions(@PathVariable String title) {
+    public List<DocumentResponse> getVersions(@PathVariable String title) {
         return documentService.getVersions(title);
     }
 
