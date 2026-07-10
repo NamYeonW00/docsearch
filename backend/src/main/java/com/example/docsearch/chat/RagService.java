@@ -3,13 +3,22 @@ package com.example.docsearch.chat;
 import com.example.docsearch.chat.dto.ChatResponseDto;
 import com.example.docsearch.search.SearchService;
 import com.example.docsearch.search.dto.SearchResultDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+@Slf4j
 @Service
 public class RagService {
+
+    private static final Duration LLM_TIMEOUT = Duration.ofSeconds(20);
 
     // LLM에게 "컨텍스트 밖 지식으로 답하지 말라"는 규칙을 강제하는 시스템 프롬프트.
     // {context} 자리에 검색된 chunk들의 본문을 채워 넣는다.
@@ -43,13 +52,32 @@ public class RagService {
         String context = buildContext(sources);
         String systemPrompt = SYSTEM_TEMPLATE.formatted(context);
 
-        String answer = chatClient.prompt()
-                .system(systemPrompt)
-                .user(query)
-                .call()
-                .content();
+        String answer = callLlmWithTimeout(systemPrompt, query);
 
         return new ChatResponseDto(answer, sources);
+    }
+
+    private String callLlmWithTimeout(String systemPrompt, String query) {
+        CompletableFuture<String> future = CompletableFuture.supplyAsync(() ->
+                chatClient.prompt()
+                        .system(systemPrompt)
+                        .user(query)
+                        .call()
+                        .content()
+        );
+
+        try {
+            return future.get(LLM_TIMEOUT.toSeconds(), TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            log.error("LLM 응답 시간 초과 (query='{}', timeout={}s)", query, LLM_TIMEOUT.toSeconds());
+            throw new AiServiceException("답변 생성이 지연되고 있습니다. 잠시 후 다시 시도해주세요.", e);
+        } catch (ExecutionException e) {
+            log.error("LLM 호출 실패 (query='{}')", query, e.getCause());
+            throw new AiServiceException("답변 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", e.getCause());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AiServiceException("답변 생성이 중단되었습니다.", e);
+        }
     }
 
     // 검색된 chunk들을 "[제목] 내용" 형태로 이어붙여 하나의 컨텍스트 텍스트로 만든다.
