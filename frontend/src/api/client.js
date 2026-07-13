@@ -42,6 +42,32 @@ export async function searchDocuments({ query, topK, category, threshold }) {
     return handleResponse(response);
 }
 
+// GET /api/documents/{id} - 특정 버전 하나를 id(PK)로 직접 조회
+export async function getDocumentById(id) {
+    const response = await fetch(`${BASE_URL}/documents/${encodeURIComponent(id)}`);
+    return handleResponse(response);
+}
+
+// GET /api/documents/title/{title} - title로 현재 활성 버전 조회
+export async function getActiveDocumentByTitle(title) {
+    const response = await fetch(`${BASE_URL}/documents/title/${encodeURIComponent(title)}`);
+    return handleResponse(response);
+}
+
+// GET /api/documents/title/{title}/versions - 해당 title의 버전 이력 전체(최신순)
+export async function getDocumentVersions(title) {
+    const response = await fetch(`${BASE_URL}/documents/title/${encodeURIComponent(title)}/versions`);
+    return handleResponse(response);
+}
+
+// DELETE /api/documents/{id} - 특정 버전 soft delete(비활성화). 비활성화된 문서를 반환.
+export async function deactivateDocument(id) {
+    const response = await fetch(`${BASE_URL}/documents/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+    });
+    return handleResponse(response);
+}
+
 // GET /api/chat?query=
 export async function askChat(query) {
     const params = new URLSearchParams({ query });

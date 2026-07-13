@@ -67,6 +67,26 @@ public class DocumentService {
         return DocumentResponse.of(document);
     }
 
+    /**
+     * 특정 버전을 soft delete(비활성화)한다. 물리 삭제는 하지 않는다.
+     * 활성 상태였다면 is_active=false로 바꾸고, 그 버전의 chunk를 vector_store에서도 제거해
+     * 삭제한 문서가 검색/질문 결과에 더 이상 노출되지 않도록 한다 (재등록 로직과 동일한 정책).
+     * 이미 비활성 상태면 아무 것도 하지 않는다(idempotent) - 이력 보존을 위해 재삭제하지 않음.
+     * 활성 버전을 삭제해도 이전 버전을 자동 승격하지 않는다.
+     */
+    @Transactional
+    public DocumentResponse deactivate(Long id) {
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("문서를 찾을 수 없습니다. id=" + id));
+        if (document.getActive()) {
+            document.deactivate();
+            vectorStore.delete("documentId == " + id);
+            log.info("문서 비활성화(soft delete) - id={}, title={}, version={}",
+                    id, document.getTitle(), document.getVersion());
+        }
+        return DocumentResponse.of(document);
+    }
+
     public DocumentResponse getActiveByTitle(String title) {
         Document document = documentRepository.findByTitleAndActiveTrue(title)
                 .orElseThrow(() -> new IllegalArgumentException("활성 버전을 찾을 수 없습니다. title=" + title));

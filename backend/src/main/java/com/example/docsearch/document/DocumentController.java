@@ -4,6 +4,7 @@ import com.example.docsearch.document.dto.DocumentRequest;
 import com.example.docsearch.document.dto.DocumentResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,6 +36,13 @@ public class DocumentController {
     @GetMapping("/{id}")
     public DocumentResponse getById(@PathVariable Long id) {
         return documentService.getById(id);
+    }
+
+    // DELETE /api/documents/{id}  - 특정 버전 soft delete(비활성화). 물리 삭제 아님.
+    // 비활성화된 최신 상태(DocumentResponse)를 반환해 프론트가 바로 UI를 갱신할 수 있게 한다.
+    @DeleteMapping("/{id}")
+    public DocumentResponse deactivate(@PathVariable Long id) {
+        return documentService.deactivate(id);
     }
 
     // GET /api/documents/title/{title}  - title로 "현재 활성" 버전 조회

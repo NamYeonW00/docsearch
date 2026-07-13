@@ -203,6 +203,15 @@
   background: var(--color-accent-soft);
 }
 
+.btn-danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.btn-danger:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
 /* ===== 공통: 뱃지 ===== */
 .badge {
   display: inline-flex;
@@ -272,6 +281,85 @@
   text-align: center;
   border: 1px dashed var(--color-border);
   border-radius: var(--radius);
+}
+
+/* ===== 단건 조회 팝업(모달) ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 100;
+}
+
+.modal {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  width: 100%;
+  max-width: 640px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--color-ink-soft);
+  padding: 0 4px;
+  border-radius: 6px;
+  transition: background-color 0.12s ease;
+}
+
+.modal-close:hover {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+/* 삭제 안내처럼 좌측에 붙여야 하는 요소는 margin-right:auto로 밀어냄 */
+.modal-footer > span {
+  margin-right: auto;
+}
+
+/* 카드가 클릭 가능한 경우 커서/호버 피드백 */
+.card-clickable {
+  cursor: pointer;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.card-clickable:hover {
+  border-color: var(--color-accent);
 }
 
 /* ===== 반응형: 모바일에서 레일을 상단 바로 전환 ===== */
