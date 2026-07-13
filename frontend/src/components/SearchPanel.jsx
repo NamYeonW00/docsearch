@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { searchDocuments } from "../api/client";
+import DocumentDetailModal from "./DocumentDetailModal";
 
 export default function SearchPanel() {
     const [query, setQuery] = useState("");
     const [topK, setTopK] = useState(5);
     const [category, setCategory] = useState("");
+    const [threshold, setThreshold] = useState(""); // 빈 문자열 = 임계값 미적용(서버 기본 동작)
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState(null); // null = 아직 검색 안 함, [] = 검색했는데 결과 없음
     const [error, setError] = useState(null);
+    const [detailId, setDetailId] = useState(null); // 팝업으로 단건 조회할 문서 id
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -17,7 +20,7 @@ export default function SearchPanel() {
         setError(null);
 
         try {
-            const response = await searchDocuments({ query, topK, category });
+            const response = await searchDocuments({ query, topK, category, threshold });
             setResults(response);
         } catch (err) {
             setError(err.message);
@@ -71,6 +74,21 @@ export default function SearchPanel() {
                             placeholder="예: framework"
                         />
                     </div>
+                    <div className="field">
+                        <label htmlFor="threshold">유사도 임계값 (선택)</label>
+                        <input
+                            id="threshold"
+                            className="input"
+                            type="number"
+                            min={0}
+                            max={1}
+                            step={0.05}
+                            value={threshold}
+                            onChange={(e) => setThreshold(e.target.value)}
+                            placeholder="0.0 ~ 1.0"
+                        />
+                        <span className="field-hint">이 값 이상 유사한 결과만 반환</span>
+                    </div>
                 </div>
 
                 <button className="btn btn-primary" type="submit" disabled={loading}>
@@ -87,7 +105,12 @@ export default function SearchPanel() {
             {results && results.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {results.map((result, index) => (
-                        <div className="card" key={index}>
+                        <div
+                            className={`card ${result.documentId != null ? "card-clickable" : ""}`}
+                            key={index}
+                            onClick={result.documentId != null ? () => setDetailId(result.documentId) : undefined}
+                            title={result.documentId != null ? "클릭하면 원문 전체를 봅니다" : undefined}
+                        >
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
                                 <div style={{ flex: 1 }}>
                                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
@@ -114,6 +137,10 @@ export default function SearchPanel() {
                         </div>
                     ))}
                 </div>
+            )}
+
+            {detailId !== null && (
+                <DocumentDetailModal documentId={detailId} onClose={() => setDetailId(null)} />
             )}
         </div>
     );

@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { askChat } from "../api/client";
+import DocumentDetailModal from "./DocumentDetailModal";
 
 export default function ChatPanel() {
     const [query, setQuery] = useState("");
     const [loading, setLoading] = useState(false);
     const [response, setResponse] = useState(null); // { answer, sources }
     const [error, setError] = useState(null);
+    const [detailId, setDetailId] = useState(null); // 팝업으로 단건 조회할 문서 id
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -69,7 +71,12 @@ export default function ChatPanel() {
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                                 {response.sources.map((source, index) => (
-                                    <div className="card" key={index}>
+                                    <div
+                                        className={`card ${source.documentId != null ? "card-clickable" : ""}`}
+                                        key={index}
+                                        onClick={source.documentId != null ? () => setDetailId(source.documentId) : undefined}
+                                        title={source.documentId != null ? "클릭하면 원문 전체를 봅니다" : undefined}
+                                    >
                                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                                             <strong style={{ fontSize: 14 }}>{source.title}</strong>
                                             {source.category && <span className="badge">{source.category}</span>}
@@ -91,6 +98,10 @@ export default function ChatPanel() {
                         </div>
                     )}
                 </div>
+            )}
+
+            {detailId !== null && (
+                <DocumentDetailModal documentId={detailId} onClose={() => setDetailId(null)} />
             )}
         </div>
     );

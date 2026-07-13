@@ -1,5 +1,6 @@
 import { useState } from "react";
 import DocumentForm from "./components/DocumentForm";
+import DocumentBrowser from "./components/DocumentBrowser";
 import SearchPanel from "./components/SearchPanel";
 import ChatPanel from "./components/ChatPanel";
 import "./App.css";
@@ -8,6 +9,7 @@ import "./App.css";
 // 이 배열 하나로 통일되어서, 탭을 추가/순서변경 할 때 여기 한 곳만 고치면 됨
 const TABS = [
   { id: "register", label: "문서 등록", description: "새 문서를 벡터 저장소에 등록" },
+  { id: "browse", label: "문서 조회", description: "제목으로 활성 버전과 버전 이력 확인" },
   { id: "search", label: "검색", description: "의미 기반으로 문서 조각을 탐색" },
   { id: "chat", label: "질문하기", description: "검색 결과를 근거로 답변 생성" },
 ];
@@ -39,6 +41,7 @@ export default function App() {
 
         <main className="content">
           {activeTab === "register" && <DocumentForm />}
+          {activeTab === "browse" && <DocumentBrowser />}
           {activeTab === "search" && <SearchPanel />}
           {activeTab === "chat" && <ChatPanel />}
         </main>

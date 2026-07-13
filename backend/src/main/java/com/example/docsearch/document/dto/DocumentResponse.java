@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public record DocumentResponse(
         Long id,
         String title,
+        String content,
         Integer version,
         Boolean active,
         String category,
@@ -19,6 +20,7 @@ public record DocumentResponse(
         return new DocumentResponse(
                 document.getId(),
                 document.getTitle(),
+                document.getContent(),
                 document.getVersion(),
                 document.getActive(),
                 document.getCategory(),
