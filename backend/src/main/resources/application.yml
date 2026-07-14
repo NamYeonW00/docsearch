@@ -2,6 +2,13 @@ spring:
   application:
     name: docsearch
 
+  servlet:
+    multipart:
+      max-file-size: 20MB      # 업로드 PDF 1개의 최대 크기
+      max-request-size: 22MB   # 요청 전체(파일 + 폼 필드) 최대 크기.
+                               # 멀티파트 경계/헤더 + title·category 폼 필드 오버헤드를 흡수하도록
+                               # max-file-size보다 여유를 둔다. (딱 20MB 파일이 오버헤드로 거부되는 것 방지)
+
   datasource:
     url: jdbc:postgresql://localhost:5432/docsearch
     username: docsearch

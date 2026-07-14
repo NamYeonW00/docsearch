@@ -2,13 +2,10 @@ package com.example.docsearch.chat;
 
 import com.example.docsearch.chat.dto.ChatResponseDto;
 import jakarta.validation.constraints.NotBlank;
-import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -35,11 +32,6 @@ public class ChatController {
         return ragService.answer(query, DEFAULT_TOP_K, null, null);
     }
 
-    // LLM 호출 실패/타임아웃은 "서버 버그"가 아니라 "외부 서비스 일시 장애"에 가까우므로
-    // 500(Internal Server Error) 대신 503(Service Unavailable)으로 의미를 명확히 구분해서 응답한다.
-    @ExceptionHandler(AiServiceException.class)
-    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-    public String handleAiServiceException(AiServiceException e) {
-        return e.getMessage();
-    }
+    // AiServiceException(LLM 실패/타임아웃 → 503) 매핑은
+    // com.example.docsearch.common.GlobalExceptionHandler로 이관했다.
 }

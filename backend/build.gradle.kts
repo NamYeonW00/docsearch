@@ -26,6 +26,7 @@ dependencies {
 	implementation("org.springframework.ai:spring-ai-starter-model-openai")
 	implementation("org.springframework.ai:spring-ai-starter-vector-store-pgvector")
 	implementation("org.springframework.ai:spring-ai-vector-store-advisor")
+	implementation("org.springframework.ai:spring-ai-pdf-document-reader") // PDF 업로드 시 텍스트 추출 (버전은 spring-ai-bom이 관리)
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.projectlombok:lombok")

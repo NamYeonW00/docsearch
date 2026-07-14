@@ -3,11 +3,15 @@ package com.example.docsearch.document;
 import com.example.docsearch.chunking.DocumentChunker;
 import com.example.docsearch.document.dto.DocumentRequest;
 import com.example.docsearch.document.dto.DocumentResponse;
+import com.example.docsearch.pdf.PdfProcessingException;
+import com.example.docsearch.pdf.PdfTextExtractor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,13 +22,16 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final DocumentChunker documentChunker;
     private final VectorStore vectorStore;
+    private final PdfTextExtractor pdfTextExtractor;
 
     public DocumentService(DocumentRepository documentRepository,
                            DocumentChunker documentChunker,
-                           VectorStore vectorStore) {
+                           VectorStore vectorStore,
+                           PdfTextExtractor pdfTextExtractor) {
         this.documentRepository = documentRepository;
         this.documentChunker = documentChunker;
         this.vectorStore = vectorStore;
+        this.pdfTextExtractor = pdfTextExtractor;
     }
 
     @Transactional
@@ -59,6 +66,66 @@ public class DocumentService {
                 newDocument.getId(), newDocument.getTitle(), newDocument.getVersion(), chunks.size());
 
         return DocumentResponse.of(newDocument);
+    }
+
+    /**
+     * 업로드된 PDF에서 텍스트를 추출한 뒤, 기존 {@link #register(DocumentRequest)} 파이프라인
+     * (버전 관리 → chunk 분할 → 임베딩 → vector_store 저장)에 그대로 흘려보낸다.
+     * 즉 PDF는 "본문을 텍스트로 바꾼 일반 문서"로 취급되며, 등록 이후 처리는 텍스트 문서와 완전히 동일하다.
+     *
+     * @param file     업로드된 PDF (multipart)
+     * @param title    문서 제목. 비어있으면 파일명(확장자 제외)을 제목으로 사용한다.
+     * @param category nullable
+     */
+    @Transactional
+    public DocumentResponse registerFromPdf(MultipartFile file, String title, String category) {
+        if (file == null || file.isEmpty()) {
+            throw new PdfProcessingException("업로드된 PDF 파일이 없습니다.");
+        }
+        if (!isPdf(file)) {
+            throw new PdfProcessingException("PDF 파일만 업로드할 수 있습니다. (filename=" + file.getOriginalFilename() + ")");
+        }
+
+        byte[] bytes;
+        try {
+            bytes = file.getBytes();
+        } catch (IOException e) {
+            throw new PdfProcessingException("업로드된 파일을 읽는 중 오류가 발생했습니다.", e);
+        }
+
+        String content = pdfTextExtractor.extractText(bytes, file.getOriginalFilename());
+        String resolvedTitle = resolveTitle(title, file.getOriginalFilename());
+
+        log.info("PDF 업로드 등록 시작 - filename={}, resolvedTitle={}", file.getOriginalFilename(), resolvedTitle);
+        // 텍스트로 변환된 이후는 일반 등록과 동일하므로 기존 register()를 그대로 재사용한다 (재등록 시 새 버전 생성 포함).
+        return register(new DocumentRequest(resolvedTitle, content, normalize(category)));
+    }
+
+    // content-type이 application/pdf 이거나 파일명이 .pdf로 끝나면 PDF로 간주한다.
+    // 브라우저/OS에 따라 content-type이 application/octet-stream으로 오는 경우가 있어 확장자도 함께 본다.
+    private boolean isPdf(MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType != null && contentType.toLowerCase().contains("pdf")) {
+            return true;
+        }
+        String filename = file.getOriginalFilename();
+        return filename != null && filename.toLowerCase().endsWith(".pdf");
+    }
+
+    // 사용자가 제목을 입력했으면 그 값을, 없으면 파일명에서 .pdf 확장자를 뗀 값을 제목으로 쓴다.
+    private String resolveTitle(String title, String originalFilename) {
+        if (title != null && !title.isBlank()) {
+            return title.strip();
+        }
+        String filename = (originalFilename == null || originalFilename.isBlank()) ? "제목 없는 PDF" : originalFilename;
+        // 경로 구분자가 섞여 들어오는 경우(브라우저별 차이)를 대비해 파일명만 남기고, 마지막 .pdf만 제거한다.
+        filename = filename.replaceAll("^.*[/\\\\]", "");
+        return filename.replaceAll("(?i)\\.pdf$", "").strip();
+    }
+
+    // 빈 문자열 카테고리는 null과 동일하게 취급 (metadata에 빈 category가 들어가지 않도록).
+    private String normalize(String value) {
+        return (value == null || value.isBlank()) ? null : value.strip();
     }
 
     public DocumentResponse getById(Long id) {
