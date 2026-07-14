@@ -7,6 +7,9 @@ export default function DocumentForm() {
     const [mode, setMode] = useState("text"); // "text": 직접 입력, "pdf": PDF 업로드
     const [form, setForm] = useState(initialForm);
     const [file, setFile] = useState(null); // PDF 모드에서 선택된 파일
+    // file input은 uncontrolled라 setFile(null)만으로는 화면의 파일명이 안 지워진다.
+    // key를 바꿔 input을 remount시키면 표시된 파일명까지 깨끗하게 초기화된다.
+    const [fileInputKey, setFileInputKey] = useState(0);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null); // 성공 시 서버 응답(DocumentResponse) 저장
     const [error, setError] = useState(null);
@@ -21,6 +24,7 @@ export default function DocumentForm() {
         setMode(next);
         setForm(initialForm);
         setFile(null);
+        setFileInputKey((k) => k + 1);
         setResult(null);
         setError(null);
     }
@@ -44,6 +48,7 @@ export default function DocumentForm() {
             // (title이 그대로면 재등록 시 바로 버전이 올라가는 걸 눈으로 확인하기도 편함 - 근데 여기선 전체 초기화가 더 명확해서 전체 초기화로 감)
             setForm(initialForm);
             setFile(null);
+            setFileInputKey((k) => k + 1); // 업로드 성공 후 file input에 남은 파일명까지 초기화
         } catch (err) {
             setError(err.message);
         } finally {
@@ -93,6 +98,7 @@ export default function DocumentForm() {
                         <div className="field">
                             <label htmlFor="pdf-file">PDF 파일</label>
                             <input
+                                key={fileInputKey}
                                 id="pdf-file"
                                 className="input"
                                 type="file"
