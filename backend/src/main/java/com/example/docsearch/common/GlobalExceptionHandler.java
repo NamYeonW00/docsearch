@@ -2,6 +2,9 @@ package com.example.docsearch.common;
 
 import com.example.docsearch.chat.AiServiceException;
 import com.example.docsearch.pdf.PdfProcessingException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -33,6 +36,19 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handlePdfProcessing(PdfProcessingException e) {
         return e.getMessage();
+    }
+
+    // @Validated가 붙은 컨트롤러의 @RequestParam 검증(@NotBlank, @Min, @Max 등) 위반은
+    // ConstraintViolationException으로 던져진다. 기본 처리 시 500으로 나가므로 명시적으로 400에 매핑한다.
+    // 예: topK=21 요청 → @Max(20) 위반 → 400. (요구사항 명세: topK 20 초과 시 400)
+    // 메시지엔 검증 애노테이션에 지정한 사용자 친화적 문구(message)만 뽑아 전달한다.
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleConstraintViolation(ConstraintViolationException e) {
+        String detail = e.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.joining(", "));
+        return detail.isBlank() ? "잘못된 요청입니다." : detail;
     }
 
     // 업로드 파일이 max-file-size(또는 max-request-size)를 초과하면 멀티파트 파싱 단계에서 이 예외가 던져진다.
