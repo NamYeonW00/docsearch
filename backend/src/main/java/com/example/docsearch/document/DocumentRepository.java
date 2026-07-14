@@ -18,4 +18,11 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
      * title 기준 버전 이력 전체 조회 (최신 버전이 먼저 오도록 정렬).
      */
     List<Document> findAllByTitleOrderByVersionDesc(String title);
+
+    /**
+     * 제목 부분 일치(대소문자 무시) 활성 버전 조회.
+     * "Spring"만 입력해도 "Spring AI 소개"가 걸리도록, 조회 화면의 제목 검색에 사용한다.
+     * 활성 버전은 title당 최대 1개이므로 결과는 title별로 최대 1건씩(= 제목 목록)이 된다.
+     */
+    List<Document> findByActiveTrueAndTitleContainingIgnoreCaseOrderByTitleAsc(String title);
 }

@@ -41,6 +41,14 @@ public class DocumentController {
         return documentService.registerFromPdf(file, title, category);
     }
 
+    // GET /api/documents?title=spring  - 제목 부분 일치(대소문자 무시)로 활성 문서 목록 조회.
+    // 정확한 제목을 몰라도("Spring"만 입력) 매칭되는 문서들을 목록으로 찾을 수 있게 한다.
+    // 목록에서 문서를 고르면 프론트가 기존 title/{title}·versions 엔드포인트로 상세를 조회한다.
+    @GetMapping
+    public List<DocumentResponse> searchByTitle(@RequestParam(value = "title", required = false) String title) {
+        return documentService.searchActiveByTitle(title);
+    }
+
     // GET /api/documents/{id}  - 특정 버전 하나를 id(PK)로 직접 조회
     @GetMapping("/{id}")
     public DocumentResponse getById(@PathVariable Long id) {
