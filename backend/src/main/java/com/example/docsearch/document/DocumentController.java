@@ -2,18 +2,14 @@ package com.example.docsearch.document;
 
 import com.example.docsearch.document.dto.DocumentRequest;
 import com.example.docsearch.document.dto.DocumentResponse;
-import com.example.docsearch.pdf.PdfProcessingException;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
@@ -70,21 +66,6 @@ public class DocumentController {
         return documentService.getVersions(title);
     }
 
-    // 임시 처리: 지금은 이 컨트롤러 안에서만 404를 처리.
-    // DocumentService에서 던지는 IllegalArgumentException("문서를 찾을 수 없습니다" 등)을 여기서 잡아서
-    // 500(서버 에러)이 아니라 404(Not Found)로 변환해 응답함.
-    // search/chat 컨트롤러까지 생기면 @RestControllerAdvice로 전역 예외 처리로 옮길 것.
-    @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String handleNotFound(IllegalArgumentException e) {
-        return e.getMessage();
-    }
-
-    // PDF 업로드 관련 문제(비-PDF, 빈 파일, 텍스트 없음, 손상된 파일 등)는 "잘못된 요청"이므로 400으로 응답한다.
-    // 프론트가 이 메시지를 그대로 사용자에게 보여줄 수 있도록 예외 메시지를 body로 내려준다.
-    @ExceptionHandler(PdfProcessingException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public String handlePdfProcessing(PdfProcessingException e) {
-        return e.getMessage();
-    }
+    // 예외 매핑(IllegalArgumentException 404, PdfProcessingException 400 등)은
+    // com.example.docsearch.common.GlobalExceptionHandler로 이관했다.
 }
