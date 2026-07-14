@@ -66,6 +66,14 @@ export async function searchDocuments({ query, topK, category, threshold }) {
     return handleResponse(response);
 }
 
+// GET /api/documents?title= - 제목 부분 일치(대소문자 무시)로 활성 문서 목록 조회.
+// 정확한 제목을 몰라도("Spring"만) 매칭되는 문서들을 목록으로 받는다.
+export async function searchDocumentsByTitle(title) {
+    const params = new URLSearchParams({ title });
+    const response = await fetch(`${BASE_URL}/documents?${params.toString()}`);
+    return handleResponse(response);
+}
+
 // GET /api/documents/{id} - 특정 버전 하나를 id(PK)로 직접 조회
 export async function getDocumentById(id) {
     const response = await fetch(`${BASE_URL}/documents/${encodeURIComponent(id)}`);

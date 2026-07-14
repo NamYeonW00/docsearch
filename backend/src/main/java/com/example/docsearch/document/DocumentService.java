@@ -154,6 +154,20 @@ public class DocumentService {
         return DocumentResponse.of(document);
     }
 
+    /**
+     * 제목 부분 일치(대소문자 무시)로 활성 문서 목록을 조회한다 (조회 화면의 제목 검색용).
+     * 예: "spring" → "Spring AI 소개", "Spring Boot 가이드" ... 각 제목의 현재 활성 버전만 반환.
+     * 빈 검색어는 전체 문서를 쏟아내지 않도록 빈 리스트로 처리한다.
+     */
+    public List<DocumentResponse> searchActiveByTitle(String title) {
+        if (title == null || title.isBlank()) {
+            return List.of();
+        }
+        return documentRepository.findByActiveTrueAndTitleContainingIgnoreCaseOrderByTitleAsc(title.strip()).stream()
+                .map(DocumentResponse::of)
+                .toList();
+    }
+
     public DocumentResponse getActiveByTitle(String title) {
         Document document = documentRepository.findByTitleAndActiveTrue(title)
                 .orElseThrow(() -> new IllegalArgumentException("활성 버전을 찾을 수 없습니다. title=" + title));
