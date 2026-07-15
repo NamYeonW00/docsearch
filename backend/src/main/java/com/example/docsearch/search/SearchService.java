@@ -56,7 +56,7 @@ public class SearchService {
                 document.getText(),
                 document.getScore(),
                 (String) metadata.get("category"), // 없으면 null 그대로 반환됨 (put 자체를 안 했으므로)
-                toInteger(metadata.get("chunkIndex")),
+                toInteger(metadata.get("chunk_index")), // TextSplitter가 chunk 분할 시 직접 채워주는 키
                 toLong(metadata.get("documentId"))
         );
     }

@@ -71,7 +71,7 @@ CREATE INDEX idx_documents_title_active ON documents(title, is_active);
 ```
 id          uuid PRIMARY KEY
 content     text
-metadata    json     -- documentId, chunkIndex, title, category 등을 이 안에 저장
+metadata    json     -- documentId, chunk_index, title, category 등을 이 안에 저장
 embedding   vector(1536)
 ```
 

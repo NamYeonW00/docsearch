@@ -5,7 +5,6 @@ import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,20 +53,8 @@ public class DocumentChunker {
         // Spring AI Document(원본 전체 텍스트 1개짜리)를 만들고, splitter에 리스트로 넘김
         // splitter.apply()는 List<Document> -> List<Document>라 단일 문서도 리스트로 감싸야 함
         Document source = new Document(content, baseMetadata);
-        List<Document> chunks = splitter.apply(List.of(source));
         // 짧은 문서면 chunks.size() == 1로 나옴 (별도 분기 없이 동일 로직으로 처리됨)
-
-        List<Document> result = new ArrayList<>(chunks.size());
-        for (int i = 0; i < chunks.size(); i++) {
-            Document chunk = chunks.get(i);
-            // chunk.getMetadata()는 splitter가 원본에서 복사해준 것 (documentId, title, category 포함).
-            // 여기에 chunkIndex/totalChunks를 "추가"해야 하는데, 반환된 Map이 불변(immutable)일 수 있어서
-            // 방어적으로 새 HashMap에 복사한 뒤 put() 하는 것 (원본 Map을 직접 수정하면 예외가 날 수 있음)
-            Map<String, Object> metadata = new HashMap<>(chunk.getMetadata());
-            metadata.put("chunkIndex", i);              // 0부터 시작하는 chunk 순번
-            metadata.put("totalChunks", chunks.size());  // 이 문서가 총 몇 개 chunk로 쪼개졌는지
-            result.add(new Document(chunk.getText(), metadata));
-        }
-        return result;
+        // chunk 순번/총 개수는 TextSplitter가 chunk_index/total_chunks 키로 직접 채워주므로 여기서 손대지 않는다.
+        return splitter.apply(List.of(source));
     }
 }

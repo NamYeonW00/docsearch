@@ -37,7 +37,7 @@ spring:
         initialize-schema: true      # 테이블 + HNSW 인덱스를 최초 기동 시 Spring AI가 자동 생성
         table-name: document_chunks  # 기본값 vector_store 대신 도메인 의미가 드러나는 이름으로 변경.
                                       # 단, 컬럼 구조(id/content/metadata/embedding)는 Spring AI 고정 스키마 그대로임에 유의
-                                      # (documentId, chunkIndex, category 등은 metadata JSON 안에 들어감. 별도 실컬럼 아님)
+                                      # (documentId, chunk_index, category 등은 metadata JSON 안에 들어감. 별도 실컬럼 아님)
         index-type: HNSW             # 빈 테이블 상태에서도 인덱스 품질 문제 없음 (IVFFlat과 다른 점)
         dimensions: 1536
         distance-type: COSINE_DISTANCE

@@ -24,4 +24,4 @@ CREATE INDEX IF NOT EXISTS idx_documents_title_active
 -- spring.ai.vectorstore.pgvector.initialize-schema=true + table-name=document_chunks 설정으로
 -- 애플리케이션 최초 기동 시 Spring AI가 자동으로 생성한다.
 -- 컬럼은 id(uuid) / content(text) / metadata(json) / embedding(vector) 4개로 고정이며,
--- documentId·chunkIndex·category 등은 모두 metadata JSON 안에 저장된다 (실제 컬럼 아님).
+-- documentId·chunk_index·category 등은 모두 metadata JSON 안에 저장된다 (실제 컬럼 아님).
